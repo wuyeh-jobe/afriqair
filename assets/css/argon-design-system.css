@@ -19516,7 +19516,7 @@ textarea[resize="horizontal"] {
 }
 
 .navbar-brand img {
-  height: 30px;
+  height: 45px;
 }
 
 .navbar-dark .navbar-brand {
@@ -19524,7 +19524,7 @@ textarea[resize="horizontal"] {
 }
 
 .navbar-light .navbar-brand {
-  color: #32325d;
+  color: #ececf8;
 }
 
 .navbar-nav .nav-item .media:not(:last-child) {
