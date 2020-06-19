@@ -33,6 +33,236 @@ Coded by www.creative-tim.com
   <link href="../assets/css/nucleo-svg.css" rel="stylesheet" />
   <!-- CSS Files -->
   <link href="../assets/css/argon-design-system.css?v=1.2.0" rel="stylesheet" />
+  <!-- Styles -->
+<style>
+  #chartdiv {
+    max-width: 100%;
+    height: 600px;
+    background-color:#fbebdb;
+  }
+  </style>
+  
+  <!-- Resources -->
+  <script src="https://www.amcharts.com/lib/4/core.js"></script>
+  <script src="https://www.amcharts.com/lib/4/maps.js"></script>
+  <script src="https://www.amcharts.com/lib/4/geodata/continentsLow.js"></script>
+  <script src="https://www.amcharts.com/lib/4/geodata/worldLow.js"></script>
+  <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
+  
+  <!-- Chart code -->
+  <script>
+      am4core.ready(function() {
+      
+      // Themes begin
+      am4core.useTheme(am4themes_animated);
+      // Themes end
+      
+      // Create map instance
+      var chart = am4core.create("chartdiv", am4maps.MapChart);
+      var interfaceColors = new am4core.InterfaceColorSet();
+      
+      try {
+          chart.geodata = am4geodata_worldLow;
+      }
+      catch (e) {
+          chart.raiseCriticalError(new Error("Map geodata could not be loaded. Please download the latest <a href=\"https://www.amcharts.com/download/download-v4/\">amcharts geodata</a> and extract its contents into the same directory as your amCharts files."));
+      }
+      
+      
+      var label = chart.createChild(am4core.Label)
+      label.text = "AirQuality data\n visualized here.";
+      label.fontSize = 12;
+      label.align = "left";
+      label.valign = "bottom"
+      label.fill = am4core.color("#927459");
+      label.background = new am4core.RoundedRectangle()
+      label.background.cornerRadius(10,10,10,10);
+      label.padding(10,10,10,10);
+      label.marginLeft = 30;
+      label.marginBottom = 30;
+      label.background.strokeOpacity = 0.3;
+      label.background.stroke =am4core.color("#927459");
+      label.background.fill = am4core.color("#f9e3ce");
+      label.background.fillOpacity = 0.6;
+      
+      var dataSource = chart.createChild(am4core.TextLink)
+      dataSource.text = "Air Quality Data";
+      dataSource.fontSize = 12;
+      dataSource.align = "left";
+      dataSource.valign = "top"
+      dataSource.url = "#"
+      dataSource.urlTarget = "_blank";
+      dataSource.fill = am4core.color("#927459");
+      dataSource.padding(10,10,10,10);
+      dataSource.marginLeft = 30;
+      dataSource.marginTop = 30;
+      
+      // Set projection
+      chart.projection = new am4maps.projections.Orthographic();
+      chart.panBehavior = "rotateLongLat";
+      chart.padding(20,20,20,20);
+      
+      // Add zoom control
+      chart.zoomControl = new am4maps.ZoomControl();
+      
+      var homeButton = new am4core.Button();
+      homeButton.events.on("hit", function(){
+        chart.goHome();
+      });
+      
+      homeButton.icon = new am4core.Sprite();
+      homeButton.padding(7, 5, 7, 5);
+      homeButton.width = 30;
+      homeButton.icon.path = "M16,8 L14,8 L14,16 L10,16 L10,10 L6,10 L6,16 L2,16 L2,8 L0,8 L8,0 L16,8 Z M16,8";
+      homeButton.marginBottom = 10;
+      homeButton.parent = chart.zoomControl;
+      homeButton.insertBefore(chart.zoomControl.plusButton);
+      
+      chart.backgroundSeries.mapPolygons.template.polygon.fill = am4core.color("#bfa58d");
+      chart.backgroundSeries.mapPolygons.template.polygon.fillOpacity = 1;
+      chart.deltaLongitude = -20;
+      chart.deltaLatitude = 10;
+      
+      // limits vertical rotation
+      chart.adapter.add("deltaLatitude", function(delatLatitude){
+          return am4core.math.fitToRange(delatLatitude, -90, 90);
+      })
+      
+      // Create map polygon series
+      
+      var shadowPolygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
+      shadowPolygonSeries.geodata = am4geodata_continentsLow;
+      
+      try {
+          shadowPolygonSeries.geodata = am4geodata_continentsLow;
+      }
+      catch (e) {
+          shadowPolygonSeries.raiseCriticalError(new Error("Map geodata could not be loaded. Please download the latest <a href=\"https://www.amcharts.com/download/download-v4/\">amcharts geodata</a> and extract its contents into the same directory as your amCharts files."));
+      }
+      
+      shadowPolygonSeries.useGeodata = true;
+      shadowPolygonSeries.dx = 2;
+      shadowPolygonSeries.dy = 2;
+      shadowPolygonSeries.mapPolygons.template.fill = am4core.color("#000");
+      shadowPolygonSeries.mapPolygons.template.fillOpacity = 0.2;
+      shadowPolygonSeries.mapPolygons.template.strokeOpacity = 0;
+      shadowPolygonSeries.fillOpacity = 0.1;
+      shadowPolygonSeries.fill = am4core.color("#000");
+      
+      
+      // Create map polygon series
+      var polygonSeries = chart.series.push(new am4maps.MapPolygonSeries());
+      polygonSeries.useGeodata = true;
+      
+      polygonSeries.calculateVisualCenter = true;
+      polygonSeries.tooltip.background.fillOpacity = 0.2;
+      polygonSeries.tooltip.background.cornerRadius = 20;
+      
+      
+      var template = polygonSeries.mapPolygons.template;
+      template.nonScalingStroke = true;
+      template.fill = am4core.color("#f9e3ce");
+      template.stroke = am4core.color("#e2c9b0");
+      
+      polygonSeries.calculateVisualCenter = true;
+      template.propertyFields.id = "id";
+      template.tooltipPosition = "fixed";
+      template.fillOpacity = 1;
+      
+      template.events.on("over", function (event) {
+        if (event.target.dummyData) {
+          event.target.dummyData.isHover = true;
+        }
+      })
+      template.events.on("out", function (event) {
+        if (event.target.dummyData) {
+          event.target.dummyData.isHover = false;
+        }
+      })
+      
+      var hs = polygonSeries.mapPolygons.template.states.create("hover");
+      hs.properties.fillOpacity = 1;
+      hs.properties.fill = am4core.color("#deb7ad");
+
+
+      /**
+      * Define SVG path for target icon
+      */
+      var targetSVG = "M9,0C4.029,0,0,4.029,0,9s4.029,9,9,9s9-4.029,9-9S13.971,0,9,0z M9,15.93 c-3.83,0-6.93-3.1-6.93-6.93S5.17,2.07,9,2.07s6.93,3.1,6.93,6.93S12.83,15.93,9,15.93 M12.5,9c0,1.933-1.567,3.5-3.5,3.5S5.5,10.933,5.5,9S7.067,5.5,9,5.5 S12.5,7.067,12.5,9z";
+
+      // create capital markers
+      var imageSeries = chart.series.push(new am4maps.MapImageSeries());
+      // define template
+      var imageSeriesTemplate = imageSeries.mapImages.template;
+      var circle = imageSeriesTemplate.createChild(am4core.Sprite);
+      circle.scale = 0.4;
+      circle.fill = new am4core.InterfaceColorSet().getFor("alternativeBackground");
+      circle.path = targetSVG;
+      // what about scale...
+
+      // set propertyfields
+      imageSeriesTemplate.propertyFields.latitude = "latitude";
+      imageSeriesTemplate.propertyFields.longitude = "longitude";
+
+      imageSeriesTemplate.horizontalCenter = "middle";
+      imageSeriesTemplate.verticalCenter = "middle";
+      imageSeriesTemplate.align = "center";
+      imageSeriesTemplate.valign = "middle";
+      imageSeriesTemplate.width = 8;
+      imageSeriesTemplate.height = 8;
+      imageSeriesTemplate.nonScaling = true;
+      imageSeriesTemplate.tooltipText = "{title}";
+      imageSeriesTemplate.fill = am4core.color("#000");
+      imageSeriesTemplate.background.fillOpacity = 0;
+      imageSeriesTemplate.background.fill = am4core.color("#ffffff");
+      imageSeriesTemplate.setStateOnChildren = true;
+      imageSeriesTemplate.states.create("hover");
+
+      imageSeries.data = [
+      {
+          "title": "Accra",
+          "latitude": 5.5401,
+          "longitude": -0.2074
+      }, {
+          "title": "Nairobi",
+          "latitude": -1.2762,
+          "longitude": 36.7965
+      }, {
+          "title": "Kigali",
+          "latitude": -1.9441,
+          "longitude": 30.0619
+      }, {
+          "title": "Niamey",
+          "latitude": 13.5164,
+          "longitude": 2.1157
+      }, {
+          "title": "Abidjan",
+          "latitude": 5.3612645,
+          "longitude": -4.0268747
+      }, {
+          "title": "Lamto",
+          "latitude": 6.2255459,
+          "longitude": -5.035735
+      }, {
+          "title": "Zamdela",
+          "latitude": -26.8604769,
+          "longitude": 27.8557254
+      }, {
+          "title": "Cairo",
+          "latitude": 30.0594838,
+          "longitude": 31.2234448
+      }, {
+          "title": "Kampala",
+          "latitude": 0.3130291,
+          "longitude": 32.5290848
+      }, {
+          "title": "Kinshasa",
+          "latitude": -4.4013005,
+          "longitude": 15.252704
+      }]
+      
+      }); // end am4core.ready()
+  </script>
 </head>
 
 <body class="profile-page">
@@ -127,7 +357,7 @@ Coded by www.creative-tim.com
     <section class="section bg-secondary">
       <div class="container2 mt--450">
         
-        <div class="mapcontainer">
+        <div class="mapcontainer" id="chartdiv">
             <div class="map">
                 <span class="text-center">Map Loading</span>
             </div>
@@ -213,7 +443,7 @@ Coded by www.creative-tim.com
       });
   </script> -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"
   charset="utf-8"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js" charset="utf-8"></script>
 <script src="../assets/js/plugins/jquery.mapael.js" ></script>
@@ -516,7 +746,7 @@ Coded by www.creative-tim.com
           }
       });
   });
-</script>
+</script> -->
 </body>
 
 </html>
